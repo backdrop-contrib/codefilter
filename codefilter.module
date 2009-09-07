@@ -2,24 +2,12 @@
 // $Id$
 
 /**
- * Implementation of hook_filter_tips()
- */
-function codefilter_filter_tips($delta, $format, $long = false) {
-  if ($long) {
-    return t('To post pieces of code, surround them with &lt;code&gt;...&lt;/code&gt; tags. For PHP code, you can use &lt;?php ... ?&gt;, which will also colour it based on syntax.');
-  }
-  else {
-    return t('You may post code using &lt;code&gt;...&lt;/code&gt; (generic) or &lt;?php ... ?&gt; (highlighted PHP) tags.');
-  }
-}
-
-/**
- * Implementation of hook_init()
+ * Implement hook_init().
  *
  * Adds the codefilter stylesheet to the page
  */
 function codefilter_init() {
-  drupal_add_css(drupal_get_path('module', 'codefilter') .'/codefilter.css', 'module', 'all', FALSE);
+  drupal_add_css(drupal_get_path('module', 'codefilter') .'/codefilter.css', array('preprocess' => FALSE));
 }
 
 /**
@@ -105,29 +93,38 @@ function codefilter_escape($text, $type = 'code') {
 }
 
 /**
- * Implementation of hook_filter()
+ * Implement hook_filter_info().
  */
-function codefilter_filter($op, $delta = 0, $format = -1, $text = '') {
-  switch ($op) {
-    case 'list':
-      return array(0 => t('Code filter'));
+function codefilter_filter_info() {
+  $filters['codefilter'] = array(
+    'title' => t('Code filter'),
+    'description' => t('Allows users to post code verbatim using &lt;code&gt; and &lt;?php ?&gt; tags.'),
+    'prepare callback' => '_codefilter_prepare',
+    'process callback' => '_codefilter_process',
+    'tips callback' => '_codefilter_tips',
+  );
+  return $filters;
+}
 
-    case 'description':
-      return t('Allows users to post code verbatim using &lt;code&gt; and &lt;?php ?&gt; tags.');
+function _codefilter_prepare($text, $format) {
+  /* Note: we replace <code> </code>, <?php ?>, [?php ?], <% %>, and [% %]
+     to prevent other filters from acting on them. */
+  $text = preg_replace('@<code>(.+?)</code>@se', "codefilter_escape('$1', 'code')", $text);
+  $text = preg_replace('@[\[<](\?php|%)(.+?)(\?|%)[\]>]@se', "codefilter_escape('$2', 'php')", $text);
+  return $text;
+}
 
-    case 'prepare':
-      /* Note: we replace <code> </code>, <?php ?>, [?php ?], <% %>, and [% %]
-         to prevent other filters from acting on them. */
-      $text = preg_replace('@<code>(.+?)</code>@se', "codefilter_escape('$1', 'code')", $text);
-      $text = preg_replace('@[\[<](\?php|%)(.+?)(\?|%)[\]>]@se', "codefilter_escape('$2', 'php')", $text);
-      return $text;
+function _codefilter_process($text, $format) {
+  $text = preg_replace('@\[codefilter_code\](.+?)\[/codefilter_code\]@se', "codefilter_process_code('$1')", $text);
+  $text = preg_replace('@\[codefilter_php\](.+?)\[/codefilter_php\]@se', "codefilter_process_php('$1')", $text);
+  return $text;
+}
 
-    case 'process':
-      $text = preg_replace('@\[codefilter_code\](.+?)\[/codefilter_code\]@se', "codefilter_process_code('$1')", $text);
-      $text = preg_replace('@\[codefilter_php\](.+?)\[/codefilter_php\]@se', "codefilter_process_php('$1')", $text);
-      return $text;
-
-    default:
-      return $text;
+function _codefilter_tips($format, $long = FALSE) {
+  if ($long) {
+    return t('To post pieces of code, surround them with &lt;code&gt;...&lt;/code&gt; tags. For PHP code, you can use &lt;?php ... ?&gt;, which will also colour it based on syntax.');
+  }
+  else {
+    return t('You may post code using &lt;code&gt;...&lt;/code&gt; (generic) or &lt;?php ... ?&gt; (highlighted PHP) tags.');
   }
 }
