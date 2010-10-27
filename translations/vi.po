@@ -1,5 +1,3 @@
-# $Id$
-#
 # VIENAMESE translation of Drupal (codefilter.module)
 # Copyright toila.net The Hong <thehongtt@gmail.com>
 # Generated from files:
