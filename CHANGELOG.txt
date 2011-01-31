@@ -1,3 +1,7 @@
+Code Filter 7.x-1.x-dev, xxxx-xx-xx (development release)
+-----------------------------------
+- Remove translations in favor of localize.drupal.org
+
 Code Filter 7.x-1.0, 2010-01-07
 -------------------------------
 - #890622 by Damien Tournoud: Remove the use of /e
