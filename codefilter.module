@@ -78,7 +78,11 @@ function _codefilter_process_code_callback($matches) {
 }
 
 function codefilter_fix_spaces($text) {
-  return preg_replace('@&nbsp;(?!&nbsp;)@', ' ', $text);
+  $text = preg_replace('@&nbsp;(?!&nbsp;)@', ' ', $text);
+  // A single space before text is ignored by browsers. If a single space
+  // follows a break tag, replace it with a non-breaking space.
+  $text = preg_replace('@<br /> ([^ ])@', '<br />&nbsp;$1', $text);
+  return $text;
 }
 
 /**
