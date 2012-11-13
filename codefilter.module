@@ -136,7 +136,7 @@ function _codefilter_prepare($text, $format) {
   /* Note: we replace <code> </code>, <?php ?>, [?php ?], <% %>, and [% %]
      to prevent other filters from acting on them. */
   $text = preg_replace_callback('@<code>(.+?)</code>@s', '_codefilter_escape_code_tag_callback', $text);
-  $text = preg_replace_callback('@[\[<](\?php|%)(.+?)(\?|%)[\]>]@s', '_codefilter_escape_php_tag_callback', $text);
+  $text = preg_replace_callback('@[\[<](\?php)(.+?)(\?)[\]>]@s', '_codefilter_escape_php_tag_callback', $text);
   return $text;
 }
 
