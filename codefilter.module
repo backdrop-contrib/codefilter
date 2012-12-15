@@ -5,6 +5,7 @@
  * Adds the codefilter stylesheet to the page
  */
 function codefilter_init() {
+  // @todo Move this to .info or process function.
   drupal_add_css(drupal_get_path('module', 'codefilter') .'/codefilter.css');
 }
 
@@ -12,16 +13,16 @@ function codefilter_init() {
  * Processes chunks of escaped PHP code into HTML.
  */
 function codefilter_process_php($text) {
-  // Note, pay attention to odd preg_replace-with-/e behaviour on slashes
-  // Undo possible linebreak filter conversion
+  // Note, pay attention to odd preg_replace-with-/e behaviour on slashes.
+  // Undo possible linebreak filter conversion.
   $text = preg_replace('@</?(br|p)\s*/?>@', '', str_replace('\"', '"', $text));
-  // Undo the escaping in the prepare step
+  // Undo the escaping in the prepare step.
   $text = decode_entities($text);
-  // Trim leading and trailing linebreaks
+  // Trim leading and trailing linebreaks.
   $text = trim($text, "\r\n");
   // Highlight as PHP
   $text = '<div class="codeblock">'. highlight_string("<?php\n$text\n?>", 1) .'</div>';
-  // Remove newlines to avoid clashing with the linebreak filter
+  // Remove newlines to avoid clashing with the linebreak filter.
   $text = str_replace("\n", '', $text);
   return codefilter_fix_spaces($text);
 }
@@ -131,6 +132,10 @@ function codefilter_filter_info() {
     'description' => t('Allows users to post code verbatim using &lt;code&gt; and &lt;?php ?&gt; tags.'),
     'prepare callback' => '_codefilter_prepare',
     'process callback' => '_codefilter_process',
+    'settings callback' => '_codefilter_settings',
+    'default settings' => array(
+      'nowrap_expand' => FALSE,
+    ),
     'tips callback' => '_codefilter_tips',
   );
   return $filters;
@@ -147,6 +152,12 @@ function _codefilter_prepare($text, $format) {
 function _codefilter_process($text, $format) {
   $text = preg_replace_callback('@\[codefilter_code\](.+?)\[/codefilter_code\]@s', '_codefilter_process_code_callback', $text);
   $text = preg_replace_callback('@\[codefilter_php\](.+?)\[/codefilter_php\]@s', '_codefilter_process_php_callback', $text);
+  // A hack, so we can conditionally nowrap based on filter settings.
+  // @todo Refactor how replacements are done so we can do this more cleanly.
+  if ($format->settings['nowrap_expand']) {
+    $text = str_replace('class="codeblock"', 'class="codeblock nowrap-expand"', $text);
+    drupal_add_js(drupal_get_path('module', 'codefilter') . '/codefilter.js');
+  }
   return $text;
 }
 
@@ -157,4 +168,23 @@ function _codefilter_tips($format, $long = FALSE) {
   else {
     return t('You may post code using &lt;code&gt;...&lt;/code&gt; (generic) or &lt;?php ... ?&gt; (highlighted PHP) tags.');
   }
+}
+
+/**
+ * Settings callback for the codefilter filter.
+ *
+ * @see hook_filter_info()
+ * @see hook_filter_FILTER_settings()
+ */
+function _codefilter_settings($form, &$form_state, $filter, $format, $defaults) {
+  $filter->settings += $defaults;
+
+  $elements = array();
+  $elements['nowrap_expand'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Expand code boxes on hover.'),
+    '#description' => t('By default, code boxes inherit text wrapping from the active theme. With this setting, code boxes will not wrap, but will expand to full width on hover (with Javascript).'),
+    '#default_value' => $filter->settings['nowrap_expand'],
+  );
+  return $elements;
 }
