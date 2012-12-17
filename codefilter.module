@@ -1,13 +1,4 @@
 <?php
-/**
- * Implement hook_init().
- *
- * Adds the codefilter stylesheet to the page
- */
-function codefilter_init() {
-  // @todo Move this to .info or process function.
-  drupal_add_css(drupal_get_path('module', 'codefilter') .'/codefilter.css');
-}
 
 /**
  * Processes chunks of escaped PHP code into HTML.
@@ -156,7 +147,6 @@ function _codefilter_process($text, $format) {
   // @todo Refactor how replacements are done so we can do this more cleanly.
   if ($format->settings['nowrap_expand']) {
     $text = str_replace('class="codeblock"', 'class="codeblock nowrap-expand"', $text);
-    drupal_add_js(drupal_get_path('module', 'codefilter') . '/codefilter.js');
   }
   return $text;
 }
