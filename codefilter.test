@@ -63,6 +63,7 @@ class CodeFilterUnitTestCase extends DrupalUnitTestCase {
     parent::setUp();
     $this->filter = codefilter_filter_info();
     $this->path = drupal_get_path('module', 'codefilter') . '/tests';
+    include_once dirname(__FILE__) . '/codefilter.module';
   }
 
   /**
