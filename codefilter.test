@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- *
+ * Functional and unit tests for codefilter.module.
  */
 
 class CodeFilterUITestCase extends DrupalWebTestCase {

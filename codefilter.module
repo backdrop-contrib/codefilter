@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Text filter for highlighting PHP source code.
+ */
 
 /**
  * Processes chunks of escaped PHP code into HTML.
@@ -11,8 +15,8 @@ function codefilter_process_php($text) {
   $text = decode_entities($text);
   // Trim leading and trailing linebreaks.
   $text = trim($text, "\r\n");
-  // Highlight as PHP
-  $text = '<div class="codeblock">'. highlight_string("<?php\n$text\n?>", 1) .'</div>';
+  // Highlight as PHP.
+  $text = '<div class="codeblock">' . highlight_string("<?php\n$text\n?>", 1) . '</div>';
   // Remove newlines to avoid clashing with the linebreak filter.
   $text = str_replace("\n", '', $text);
   return codefilter_fix_spaces($text);
@@ -31,9 +35,9 @@ function _codefilter_process_php_callback($matches) {
 function codefilter_process_php_inline($matches) {
   // Undo nl2br
   $text = str_replace('<br />', '', $matches[0]);
-  // Decode entities (the highlighter re-entifies) and highlight text
+  // Decode entities (the highlighter re-entifies) and highlight text.
   $text = highlight_string(decode_entities($text), 1);
-  // Remove PHP's own added code tags
+  // Remove PHPs own added code tags.
   $text = str_replace(array('<code>', '</code>', "\n"), array('', '', ''), $text);
   return $text;
 }
@@ -42,33 +46,48 @@ function codefilter_process_php_inline($matches) {
  * Processes chunks of escaped code into HTML.
  */
 function codefilter_process_code($text) {
-  // Undo linebreak escaping
+  // Undo linebreak escaping.
   $text = str_replace('&#10;', "\n", $text);
   // Inline or block level piece?
   $multiline = strpos($text, "\n") !== FALSE;
-  // Note, pay attention to odd preg_replace-with-/e behaviour on slashes
+  // Note, pay attention to odd preg_replace-with-/e behaviour on slashes.
   $text = preg_replace("/^\n/", '', preg_replace('@</?(br|p)\s*/?>@', '', str_replace('\"', '"', $text)));
-  // Trim leading and trailing linebreaks
+  // Trim leading and trailing linebreaks.
   $text = trim($text, "\n");
-  // Escape newlines
+  // Escape newlines.
   $text = nl2br($text);
 
-  // PHP code in regular code
+  // PHP code in regular code.
   $text = preg_replace_callback('/&lt;\?php.+?\?&gt;/s', 'codefilter_process_php_inline', $text);
 
-  $text = '<code>'. codefilter_fix_spaces(str_replace(' ', '&nbsp;', $text)) .'</code>';
-  if ($multiline) $text = '<div class="codeblock">'. $text .'</div>';
-  // Remove newlines to avoid clashing with the linebreak filter
+  $text = '<code>' . codefilter_fix_spaces(str_replace(' ', '&nbsp;', $text)) . '</code>';
+  $text = $multiline ? '<div class="codeblock">' . $text . '</div>' : $text;
+  // Remove newlines to avoid clashing with the linebreak filter.
   return str_replace("\n", '', $text);
 }
 
 /**
  * Callback to replace content of the <code> elements.
+ *
+ * @param array $matches
+ *   An array of matches passed by preg_replace_callback().
+ *
+ * @return string
+ *   A formatted string.
  */
 function _codefilter_process_code_callback($matches) {
   return codefilter_process_code($matches[1]);
 }
 
+/**
+ * Replace html space elements with literal space characters.
+ *
+ * @param string $text
+ *   A string to fix spaces for.
+ *
+ * @return string
+ *   A formatted string.
+ */
 function codefilter_fix_spaces($text) {
   $text = preg_replace('@&nbsp;(?!&nbsp;)@', ' ', $text);
   // A single space before text is ignored by browsers. If a single space
@@ -80,21 +99,22 @@ function codefilter_fix_spaces($text) {
 /**
  * Escape code blocks during input filter 'prepare'.
  *
- * @param $text
+ * @param string $text
  *   The string to escape.
- * @param $type
+ * @param string $type
  *   The type of code block, either 'code' or 'php'.
- * @return
+ *
+ * @return string
  *   The escaped string.
  */
 function codefilter_escape($text, $type = 'code') {
-  // Note, pay attention to odd preg_replace-with-/e behaviour on slashes
+  // Note, pay attention to odd preg_replace-with-/e behaviour on slashes.
   $text = check_plain(str_replace('\"', '"', $text));
 
-  // Protect newlines from line break converter
+  // Protect newlines from line break converter.
   $text = str_replace(array("\r", "\n"), array('', '&#10;'), $text);
 
-  // Add codefilter escape tags
+  // Add codefilter escape tags.
   $text = "[codefilter_$type]{$text}[/codefilter_$type]";
 
   return $text;
@@ -115,7 +135,7 @@ function _codefilter_escape_php_tag_callback($matches) {
 }
 
 /**
- * Implement hook_filter_info().
+ * Implements hook_filter_info().
  */
 function codefilter_filter_info() {
   $filters['codefilter'] = array(
@@ -132,14 +152,21 @@ function codefilter_filter_info() {
   return $filters;
 }
 
+/**
+ * Implements hook_filter_FILTER_prepare().
+ *
+ * Escape code tags to prevent other filters from acting on them.
+ * <code> </code>, <?php ?>, [?php ?], <% %>, and [% %] tags are escaped.
+ */
 function _codefilter_prepare($text, $format) {
-  /* Note: we replace <code> </code>, <?php ?>, [?php ?], <% %>, and [% %]
-     to prevent other filters from acting on them. */
   $text = preg_replace_callback('@<code>(.+?)</code>@s', '_codefilter_escape_code_tag_callback', $text);
   $text = preg_replace_callback('@[\[<](\?php)(.+?)(\?)[\]>]@s', '_codefilter_escape_php_tag_callback', $text);
   return $text;
 }
 
+/**
+ * Implements hook_filter_FILTER_process().
+ */
 function _codefilter_process($text, $format) {
   $text = preg_replace_callback('@\[codefilter_code\](.+?)\[/codefilter_code\]@s', '_codefilter_process_code_callback', $text);
   $text = preg_replace_callback('@\[codefilter_php\](.+?)\[/codefilter_php\]@s', '_codefilter_process_php_callback', $text);
@@ -151,6 +178,9 @@ function _codefilter_process($text, $format) {
   return $text;
 }
 
+/**
+ * Implements hook_filter_FILTER_tips().
+ */
 function _codefilter_tips($format, $long = FALSE) {
   if ($long) {
     return t('To post pieces of code, surround them with &lt;code&gt;...&lt;/code&gt; tags. For PHP code, you can use &lt;?php ... ?&gt;, which will also colour it based on syntax.');
