@@ -16,7 +16,7 @@ function codefilter_process_php($text) {
   // Trim leading and trailing linebreaks.
   $text = trim($text, "\r\n");
   // Highlight as PHP.
-  $text = '<div class="codeblock">' . highlight_string("<?php\n$text\n?>", 1) . '</div>';
+  $text = '<div class="codeblock"><pre>' . highlight_string("<?php\n$text\n?>", 1) . '</pre></div>';
   // Remove newlines to avoid clashing with the linebreak filter.
   $text = str_replace("\n", '', $text);
   return codefilter_fix_spaces($text);
