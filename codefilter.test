@@ -92,7 +92,7 @@ class CodeFilterUnitTestCase extends DrupalUnitTestCase {
     $input = file_get_contents($this->path . '/codefilter.php-input.txt');
     $expected = file_get_contents($this->path . '/codefilter.php-output.txt');
     $result = $this->filterText($input);
-    $this->assertIdentical($expected, $result, 'PHP tags are filtered.');
+    $this->assertIdentical($expected, $result);
   }
 
   /**
@@ -102,7 +102,7 @@ class CodeFilterUnitTestCase extends DrupalUnitTestCase {
     $input = file_get_contents($this->path . '/codefilter.code-input.txt');
     $expected = file_get_contents($this->path . '/codefilter.code-output.txt');
     $result = $this->filterText($input);
-    $this->assertIdentical($expected, $result, 'Code tags are filtered.');
+    $this->assertIdentical($expected, $result);
   }
 
   /**
@@ -136,6 +136,20 @@ EOD;
       strpos($result, '<div class="codeblock nowrap-expand">') !== FALSE,
       'Expand class is added to codefilter blocks that are too long when that option is specified.'
     );
+  }
+
+  /**
+   * Overrides DrupalTestCase::assertIdentical().
+   *
+   * Ignores $message and dump-exports $first and $second into the test result
+   * output instead.
+   */
+  protected function assertIdentical($first, $second, $message = '', $group = '') {
+    $message = format_string('<pre>@first</pre> is identical to <pre>@second</pre>', array(
+      '@first' => var_export($first, TRUE),
+      '@second' => var_export($second, TRUE),
+    ));
+    parent::assertIdentical($first, $second, $message);
   }
 }
 
