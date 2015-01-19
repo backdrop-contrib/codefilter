@@ -4,23 +4,12 @@
  * Functional and unit tests for codefilter.module.
  */
 
-class CodeFilterUITestCase extends DrupalWebTestCase {
-
-  /**
-   * Implements getInfo().
-   */
-  public static function getInfo() {
-    return array(
-      'name' => t('Code Filter'),
-      'description' => t('Ensure code wrapped in php or code tags renders as expected.'),
-      'group' => t('Code Filter'),
-    );
-  }
+class CodeFilterUITestCase extends BackdropWebTestCase {
 
   function setUp() {
     // Enable codefilter.module for testing.
     parent::setup('codefilter');
-    $this->web_editor = $this->drupalCreateUser(array('create article content'));
+    $this->web_editor = $this->backdropCreateUser(array('create article content'));
   }
 
 
@@ -32,7 +21,7 @@ class CodeFilterUITestCase extends DrupalWebTestCase {
    * @return array
    *  An array suitable for saving in a node object body field.
    *
-   * @see DrupalWebTestCase::drupalCreateNode();
+   * @see BackdropWebTestCase::backdropCreateNode();
    */
   protected function nodeBody($value) {
     return array(
@@ -46,24 +35,16 @@ class CodeFilterUITestCase extends DrupalWebTestCase {
 
 }
 
-class CodeFilterUnitTestCase extends DrupalUnitTestCase {
+class CodeFilterUnitTestCase extends BackdropUnitTestCase {
 
   // The filter object as returned from codefilter_filter_info().
   private $filter;
 
-  public static function getInfo() {
-    return array(
-      'name' => 'Codefilter module text filters',
-      'description' => 'Tests raw filtering functions.',
-      'group' => 'Code Filter',
-    );
-  }
-
   protected function setUp() {
     parent::setUp();
-    include_once dirname(__FILE__) . '/codefilter.module';
+    include_once dirname(__FILE__) . '/../codefilter.module';
     $this->filter = codefilter_filter_info();
-    $this->path = drupal_get_path('module', 'codefilter') . '/tests';
+    $this->path = backdrop_get_path('module', 'codefilter') . '/tests';
   }
 
   /**
@@ -116,7 +97,7 @@ line2
 </code>
 EOD;
     $expected = <<<EOD
-<div class="codeblock"><code class="diff">line1<br />line2</code></div>
+<div class="codeblock"><pre><code class="diff">line1<br />line2</code></pre></div>
 EOD;
     $result = $this->filterText($input);
     $this->assertIdentical($expected, $result);
@@ -139,7 +120,7 @@ EOD;
   }
 
   /**
-   * Overrides DrupalTestCase::assertIdentical().
+   * Overrides BackdropTestCase::assertIdentical().
    *
    * Ignores $message and dump-exports $first and $second into the test result
    * output instead.

@@ -1,16 +1,13 @@
 div.codeblock {
-  padding: 5px;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+div.codeblock pre {
   border: 1px solid #CCC;
   background-color: #EEE;
+  white-space: pre;
+  overflow: auto;
 }
-
-/*
-Multiclass not supported in IE6.
-*/
-div.codeblock.nowrap-expand {
-  /*
-  Not supported in IE6 or 7.
-  */
-  white-space: nowrap;
+div.codeblock.nowrap-expand pre {
   overflow: hidden;
 }

@@ -1,9 +1,9 @@
 (function ($) {
 
-  Drupal.behaviors.codefilter = {
+  Backdrop.behaviors.codefilter = {
     attach:function (context) {
       // Provide expanding text boxes when code blocks are too long.
-      $("div.codeblock.nowrap-expand", context).each(function () {
+      $("div.codeblock.nowrap-expand pre", context).each(function () {
           var contents_width = $(this).contents().width();
           var width = $(this).width();
           if (contents_width > width) {
